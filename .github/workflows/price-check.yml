@@ -32,6 +32,8 @@ jobs:
         env:
           # Optional: set this repo secret to also ping Slack/Discord.
           ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+          # Optional: set this repo secret to route requests through ScraperAPI.
+          SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
         run: python check_price.py --config config.json --state data/price_history.json
 
       - name: Commit price history

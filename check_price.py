@@ -48,21 +48,28 @@ WAS_KEYS = (
 
 
 def fetch(url: str, timeout: int = 30, retries: int = 3) -> str:
-    headers = {
-        "User-Agent": UA,
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Cache-Control": "no-cache",
-    }
+    scraper_key = os.environ.get("SCRAPER_API_KEY")
+    if scraper_key:
+        import urllib.parse
+        target_url = f"http://api.scraperapi.com/?api_key={scraper_key}&url={urllib.parse.quote(url)}"
+        headers = {}
+    else:
+        target_url = url
+        headers = {
+            "User-Agent": UA,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache",
+        }
     last_err = None
     for attempt in range(1, retries + 1):
         try:
-            req = urllib.request.Request(url, headers=headers)
+            req = urllib.request.Request(target_url, headers=headers)
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 body = resp.read()
                 charset = resp.headers.get_content_charset() or "utf-8"
                 html = body.decode(charset, errors="replace")
-            if _looks_like_bot_block(html):
+            if not scraper_key and _looks_like_bot_block(html):
                 raise RuntimeError("response looks like a bot/challenge page")
             return html
         except (urllib.error.URLError, urllib.error.HTTPError, RuntimeError) as e:
