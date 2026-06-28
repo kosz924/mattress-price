@@ -1,0 +1,60 @@
+name: price-check
+
+on:
+  schedule:
+    # Every 6 hours (UTC). GitHub may delay scheduled runs under load.
+    - cron: "17 */6 * * *"
+  workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
+
+permissions:
+  contents: write   # commit the updated price history
+  issues: write     # open an alert issue
+
+concurrency:
+  group: price-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Self-test the parser
+        run: python check_price.py --selftest
+
+      - name: Check prices
+        id: check
+        env:
+          # Optional: set this repo secret to also ping Slack/Discord.
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+        run: python check_price.py --config config.json --state data/price_history.json
+
+      - name: Commit price history
+        run: |
+          if [[ -n "$(git status --porcelain data/price_history.json)" ]]; then
+            git config user.name "price-bot"
+            git config user.email "price-bot@users.noreply.github.com"
+            git add data/price_history.json
+            git commit -m "price update $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          else
+            echo "No price change to commit."
+          fi
+
+      - name: Open alert issue
+        if: steps.check.outputs.has_alert == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Price alert — $(date -u +%Y-%m-%d)" \
+            --body-file alert.md \
+            --label price-alert 2>/dev/null \
+          || gh issue create \
+            --title "Price alert — $(date -u +%Y-%m-%d)" \
+            --body-file alert.md
