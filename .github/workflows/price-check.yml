@@ -2,8 +2,8 @@ name: price-check
 
 on:
   schedule:
-    # Every 6 hours (UTC). GitHub may delay scheduled runs under load.
-    - cron: "17 */6 * * *"
+    # Once per day (12:17 UTC / 8:17 AM EDT). GitHub may delay scheduled runs under load.
+    - cron: "17 12 * * *"
   workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
 
 permissions:
