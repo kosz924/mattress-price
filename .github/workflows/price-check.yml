@@ -36,8 +36,8 @@ jobs:
           SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
         run: |
           python check_price.py --config config.json --state data/price_history.json --dump
-          python3 -c '\''
-          import re, os
+          cat << 'EOF' > diag.py
+          import re, sys
           from pathlib import Path
           files = list(Path(".").glob("dump_*.html"))
           if not files:
@@ -52,7 +52,8 @@ jobs:
           print("SCRIPT TAGS COUNT:", len(scripts))
           for s in scripts[:30]:
               print("  Script:", s.strip())
-          '\''
+          EOF
+          python3 diag.py
 
       - name: Commit price history
         run: |
