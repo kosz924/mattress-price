@@ -34,7 +34,7 @@ jobs:
           ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
           # Optional: set this repo secret to route requests through ScraperAPI.
           SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
-        run: python check_price.py --config config.json --state data/price_history.json
+        run: python check_price.py --config config.json --state data/price_history.json --dump && head -n 300 dump_*.html || true
 
       - name: Commit price history
         run: |
