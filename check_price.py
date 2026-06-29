@@ -196,6 +196,41 @@ def _regex_prices(html: str) -> list[float]:
     return [p for p in prices if p >= 50]
 
 
+def _extract_nextjs_app_router(html: str, variant_id: str | None) -> list[dict]:
+    if not variant_id:
+        return []
+    found = []
+    for m in re.finditer(re.escape(str(variant_id)), html):
+        start = max(0, m.start() - 300)
+        end = min(len(html), m.end() + 300)
+        chunk = html[start:end]
+        price_match = re.search(r'"price"\s*:\s*(\d+(?:\.\d+)?)', chunk)
+        full_price_match = re.search(r'"fullPrice"\s*:\s*(\d+(?:\.\d+)?)', chunk)
+        if not price_match:
+            price_match = re.search(r'"v_AdjustedPrice"\s*:\s*(\d+(?:\.\d+)?)', chunk)
+        if not full_price_match:
+            full_price_match = re.search(r'"v_Price"\s*:\s*(\d+(?:\.\d+)?)', chunk)
+        if price_match:
+            p = float(price_match.group(1))
+            if p >= 50:
+                found.append({
+                    "path": f"nextjs_app_router.variant.{variant_id}",
+                    "key": "price",
+                    "value": p,
+                    "raw": p
+                })
+        if full_price_match:
+            fp = float(full_price_match.group(1))
+            if fp >= 50:
+                found.append({
+                    "path": f"nextjs_app_router.variant.{variant_id}",
+                    "key": "wasprice",
+                    "value": fp,
+                    "raw": fp
+                })
+    return found
+
+
 def extract(html: str, variant_id: str | None, verbose: bool = False) -> dict:
     """Return {current, was, on_sale, source, candidates}."""
     candidates: list[dict] = []
@@ -206,6 +241,12 @@ def extract(html: str, variant_id: str | None, verbose: bool = False) -> dict:
         candidates = _collect_prices(nd)
         if candidates:
             source = "__NEXT_DATA__"
+
+    if not candidates:
+        ar_candidates = _extract_nextjs_app_router(html, variant_id)
+        if ar_candidates:
+            candidates = ar_candidates
+            source = "nextjs-app-router"
 
     if not candidates:
         jl = _extract_jsonld(html)
@@ -431,6 +472,13 @@ def selftest() -> int:
     # regex split-cents fallback
     rx = _regex_prices('<div>$3,499</sup>00<')
     assert 3499.0 in rx, rx
+    # Next.js App Router test
+    ar_fixture = '{"id":"King","title":"King","size":"King","variantId":5637491242,"price":4099,"fullPrice":4999}'
+    r3 = extract(ar_fixture, "5637491242", verbose=False)
+    assert r3["current"] == 4099.0, r3
+    assert r3["was"] == 4999.0, r3
+    assert r3["on_sale"] is True, r3
+    assert r3["source"] == "nextjs-app-router", r3
     print("OK — all selftests passed")
     return 0
 
