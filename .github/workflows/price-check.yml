@@ -48,10 +48,10 @@ jobs:
           print("PAGE TITLE:", title.group(1).strip() if title else "None")
           print("NEXT_DATA IN HTML:", "__NEXT_DATA__" in html)
           print("LD+JSON IN HTML:", "application/ld+json" in html)
-          scripts = re.findall(r"<script([^>]*)>", html)
-          print("SCRIPT TAGS COUNT:", len(scripts))
-          for s in scripts[:30]:
-              print("  Script:", s.strip())
+          ld_json = re.findall(r"<script[^>]+type=\"application/ld\+json\"[^>]*>(.*?)</script>", html, re.DOTALL)
+          print("LD+JSON BLOCKS FOUND:", len(ld_json))
+          for i, block in enumerate(ld_json):
+              print(f"  Block {i}:", block[:2000].strip())
           EOF
           python3 diag.py
 
