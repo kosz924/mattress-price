@@ -56,7 +56,9 @@ jobs:
           gh issue create \
             --title "Price alert — $(date -u +%Y-%m-%d)" \
             --body-file alert.md \
+            --assignee kosz924 \
             --label price-alert 2>/dev/null \
           || gh issue create \
             --title "Price alert — $(date -u +%Y-%m-%d)" \
-            --body-file alert.md
+            --body-file alert.md \
+            --assignee kosz924
