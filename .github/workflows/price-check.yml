@@ -44,14 +44,13 @@ jobs:
               print("No dump files found.")
               sys.exit(0)
           html = files[0].read_text(errors="ignore")
-          title = re.search(r"<title>(.*?)</title>", html, re.I)
-          print("PAGE TITLE:", title.group(1).strip() if title else "None")
-          print("NEXT_DATA IN HTML:", "__NEXT_DATA__" in html)
-          print("LD+JSON IN HTML:", "application/ld+json" in html)
-          ld_json = re.findall(r"<script[^>]+type=\"application/ld\+json\"[^>]*>(.*?)</script>", html, re.DOTALL)
-          print("LD+JSON BLOCKS FOUND:", len(ld_json))
-          for i, block in enumerate(ld_json):
-              print(f"  Block {i}:", block[:2000].strip())
+          variant_id = "5637491242"
+          print("SEARCHING FOR VARIANT ID:", variant_id)
+          for m in re.finditer(re.escape(variant_id), html):
+              start = max(0, m.start() - 200)
+              end = min(len(html), m.end() + 200)
+              context = html[start:end].strip().replace("\n", " ")
+              print(f"Match at index {m.start()}: ... {context} ...")
           EOF
           python3 diag.py
 
