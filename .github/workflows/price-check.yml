@@ -34,7 +34,25 @@ jobs:
           ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
           # Optional: set this repo secret to route requests through ScraperAPI.
           SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
-        run: python check_price.py --config config.json --state data/price_history.json --dump && head -n 300 dump_*.html || true
+        run: |
+          python check_price.py --config config.json --state data/price_history.json --dump
+          python3 -c '\''
+          import re, os
+          from pathlib import Path
+          files = list(Path(".").glob("dump_*.html"))
+          if not files:
+              print("No dump files found.")
+              sys.exit(0)
+          html = files[0].read_text(errors="ignore")
+          title = re.search(r"<title>(.*?)</title>", html, re.I)
+          print("PAGE TITLE:", title.group(1).strip() if title else "None")
+          print("NEXT_DATA IN HTML:", "__NEXT_DATA__" in html)
+          print("LD+JSON IN HTML:", "application/ld+json" in html)
+          scripts = re.findall(r"<script([^>]*)>", html)
+          print("SCRIPT TAGS COUNT:", len(scripts))
+          for s in scripts[:30]:
+              print("  Script:", s.strip())
+          '\''
 
       - name: Commit price history
         run: |
