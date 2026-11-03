@@ -1,10 +1,10 @@
 {
   "https://www.mattressfirm.com/tempur-proadapt-20-12-medium-hybrid-mattress/5637491100.p?variantid=5637491242": {
     "name": "TEMPUR-ProAdapt 2.0 12\" Medium Hybrid \u2014 King",
-    "current": 4199.0,
+    "current": 3999.0,
     "was": null,
     "on_sale": false,
-    "checked": "2026-11-02T21:45:02+00:00",
+    "checked": "2026-11-03T19:32:50+00:00",
     "history": [
       {
         "t": "2026-06-29T00:06:08+00:00",
@@ -29,6 +29,10 @@
       {
         "t": "2026-09-16T17:04:55+00:00",
         "price": 4199.0
+      },
+      {
+        "t": "2026-11-03T19:32:50+00:00",
+        "price": 3999.0
       }
     ]
   }
